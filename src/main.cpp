@@ -1114,54 +1114,20 @@ unsigned char GetNfactor(int64 nTimestamp) {
 
 int64 static GetBlockValue(int nHeight, int64 nFees)
 {
+    int64 nSubsidy = 12 * COIN;
 
-
-
-
-
-
-
-
-
-int64 nSubsidy = 1200 * COIN;
- 
- 
- if(nHeight < 4)    
-        {
-  
-                nSubsidy = 1 * COIN;  
-        }
-  else if(nHeight >= 4 && nHeight < 9) 
-
-        {
-    nSubsidy = 500000000 * COIN;
-  } 
- 
+    if(nHeight < 4)
+    {
+        nSubsidy = 1 * COIN;
+    }
+    else if(nHeight >= 4 && nHeight < 9)
+    {
+        nSubsidy = 500000000 * COIN;
+    }
     // Subsidy is cut in half every 840000 blocks, which will occur approximately every 4 years
     nSubsidy >>= (nHeight / 840000); // hempcoin: 840k blocks in ~4 years
 
     return nSubsidy + nFees;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    int64 nSubsidy = 50 * COIN;
-
-    // Subsidy is cut in half every 840000 blocks, which will occur approximately every 4 years
-  //  nSubsidy >>= (nHeight / 840000); // hempcoin: 840k blocks in ~4 years
-
-    //return nSubsidy + nFees;
 }
 
 
@@ -1907,8 +1873,11 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     if (fBenchmark)
         printf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)vtx.size(), 0.001 * nTime, 0.001 * nTime / vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
 
-    //if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
-       // return state.DoS(100, error("ConnectBlock() : coinbase pays too much (actual=%"PRI64d" vs limit=%"PRI64d")", vtx[0].GetValueOut(), GetBlockValue(pindex->nHeight, nFees)));
+    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
+    {
+        if(pindex->GetBlockHeader().nVersion > 2)
+            return state.DoS(100, error("ConnectBlock() : coinbase pays too much (actual=%"PRI64d" vs limit=%"PRI64d")", vtx[0].GetValueOut(), GetBlockValue(pindex->nHeight, nFees)));
+    }
 
     if (!control.Wait())
         return state.DoS(100, false);
@@ -2417,6 +2386,15 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
                     return state.DoS(100, error("AcceptBlock() : block height mismatch in coinbase"));
             }
         }
+        // Reject block.nVersion<3 blocks when 95% (75% on testnet) of the network has upgraded:
+        if (nVersion < 3)
+        {
+            if ((!fTestNet && CBlockIndex::IsSuperMajority(3, pindexPrev, 750, 1000)) ||
+                (fTestNet && CBlockIndex::IsSuperMajority(3, pindexPrev, 75, 100)))
+            {
+                return state.Invalid(error("AcceptBlock() : rejected nVersion<3 block"));
+            }
+        }
     }
 
     // Write block to history file
@@ -2452,7 +2430,10 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
 bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired, unsigned int nToCheck)
 {
     // hempcoin: temporarily disable v2 block lockin until we are ready for v2 transition
-    return false;
+    // return false;
+    // scruffy scruffington: disable v2 block locking but allow v3 lockin
+    if(minVersion == 2)
+        return false;
     unsigned int nFound = 0;
     for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
     {
