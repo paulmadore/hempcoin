@@ -234,21 +234,21 @@ Value listunspent(const Array& params, bool fHelp)
                 entry.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
         }
         entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
-        if (pk.IsPayToScriptHash())
-        {
-            CTxDestination address;
-            if (ExtractDestination(pk, address))
-            {
-                const CScriptID& hash = boost::get<const CScriptID&>(address);
-                CScript redeemScript;
-                if (pwalletMain->GetCScript(hash, redeemScript))
-                    entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+                if (pk.IsPayToScriptHash())
+                {
+                    CTxDestination address;
+                    if (ExtractDestination(pk, address))
+                    {
+                        const CScriptID& hash = boost::get<CScriptID>(address);
+                        CScript redeemScript;
+                        if (pwalletMain->GetCScript(hash, redeemScript))
+                            entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+                    }
+                }
+                entry.push_back(Pair("amount",ValueFromAmount(nValue)));
+                entry.push_back(Pair("confirmations",out.nDepth));
+                results.push_back(entry);
             }
-        }
-        entry.push_back(Pair("amount",ValueFromAmount(nValue)));
-        entry.push_back(Pair("confirmations",out.nDepth));
-        results.push_back(entry);
-    }
 
     return results;
 }

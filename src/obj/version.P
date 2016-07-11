@@ -1,4 +1,4 @@
 obj/version.o: version.cpp version.h clientversion.h \
- /opt/GITHUB/src/obj/build.h
+ /home/phm/stuff/Paul/Coding/current-code/hempcoin/src/obj/build.h
 version.cpp version.h clientversion.h :
- /opt/GITHUB/src/obj/build.h :
+ /home/phm/stuff/Paul/Coding/current-code/hempcoin/src/obj/build.h :

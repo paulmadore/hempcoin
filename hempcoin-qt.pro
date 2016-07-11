@@ -25,19 +25,6 @@ UI_DIR = build
 
 
 
-BOOST_INCLUDE_PATH=C:/deps2/boost_1_54_0
-BOOST_LIB_PATH=C:/deps2/boost_1_54_0/stage/lib
-BDB_INCLUDE_PATH=C:/deps2/db-4.8.30.NC/build_unix
-BDB_LIB_PATH=C:/deps2/db-4.8.30.NC/build_unix
-OPENSSL_INCLUDE_PATH=C:/deps2/openssl-1.0.1g/include
-OPENSSL_LIB_PATH=C:/deps2/openssl-1.0.1g
-
-
-
-
-
-
-
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
     # Mac: compile for maximum compatibility (10.5, 32-bit)
@@ -147,9 +134,6 @@ QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; cd $$PWD/src/leveldb ; $(MAKE) cl
 }
 
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector
-
-macx:QMAKE_CXXFLAGS_WARN_ON += -Wno-deprecated
-
 
 # Input
 DEPENDPATH += src src/json src/qt
@@ -385,11 +369,11 @@ OTHER_FILES += README.md \
 # platform specific defaults, if not overridden on command line
 isEmpty(BOOST_LIB_SUFFIX) {
     macx:BOOST_LIB_SUFFIX = -mt
-    win32:BOOST_LIB_SUFFIX = -mgw48-mt-s-1_54#-mgw44-mt-s-1_50
+
 }
 
 isEmpty(BOOST_THREAD_LIB_SUFFIX) {
-    BOOST_THREAD_LIB_SUFFIX =-mgw48-mt-s-1_54#$$BOOST_LIB_SUFFIX
+    BOOST_THREAD_LIB_SUFFIX = #$$BOOST_LIB_SUFFIX
 }
 
 isEmpty(BDB_LIB_PATH) {
@@ -412,36 +396,12 @@ isEmpty(BOOST_INCLUDE_PATH) {
     macx:BOOST_INCLUDE_PATH = /opt/local/include
 }
 
-win32:DEFINES += WIN32
-win32:RC_FILE = src/qt/res/vertcoin-qt.rc
-
-win32:!contains(MINGW_THREAD_BUGFIX, 0) {
-    # At least qmake's win32-g++-cross profile is missing the -lmingwthrd
-    # thread-safety flag. GCC has -mthreads to enable this, but it doesn't
-    # work with static linking. -lmingwthrd must come BEFORE -lmingw, so
-    # it is prepended to QMAKE_LIBS_QT_ENTRY.
-    # It can be turned off with MINGW_THREAD_BUGFIX=0, just in case it causes
-    # any problems on some untested qmake profile now or in the future.
-    DEFINES += _MT
-    QMAKE_LIBS_QT_ENTRY = -lmingwthrd $$QMAKE_LIBS_QT_ENTRY
-}
-
 !win32:!macx {
     DEFINES += LINUX
     LIBS += -lrt
     # _FILE_OFFSET_BITS=64 lets 32-bit fopen transparently support large files.
     DEFINES += _FILE_OFFSET_BITS=64
 }
-
-macx:HEADERS += src/qt/macdockiconhandler.h src/qt/macnotificationhandler.h
-macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm src/qt/macnotificationhandler.mm
-macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit -framework CoreServices
-macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0
-macx:ICON = src/qt/res/icons/vertcoin.icns
-macx:QMAKE_CFLAGS_THREAD += -pthread
-macx:QMAKE_LFLAGS_THREAD += -pthread
-macx:QMAKE_CXXFLAGS_THREAD += -pthread
-macx:QMAKE_INFO_PLIST = share/qt/Info.plist
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
 INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
